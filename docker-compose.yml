@@ -1,0 +1,167 @@
+﻿# Isolated CareQueue stack.
+#
+# Every container name, network, volume, host port and the project name come from .env, so this
+# stack can run beside another CareQueue stack on the same machine without touching it.
+#
+# Do NOT add a docker-compose.override.yml that redefines "ports" or "volumes": Compose MERGES list
+# values, so the original ports would stay published next to the new ones. Change .env instead.
+
+name: ${CQ_STACK:?CQ_STACK must be set in .env}
+
+services:
+  # Relational database (PostgreSQL)
+  postgresql:
+    image: postgres:16-alpine
+    container_name: ${CQ_STACK}-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DATABASE_NAME:?DATABASE_NAME must be set in .env}
+      POSTGRES_USER: ${DATABASE_USERNAME:?DATABASE_USERNAME must be set in .env}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:?DATABASE_PASSWORD must be set in .env}
+    ports:
+      - "${CQ_BIND_ADDRESS:-127.0.0.1}:${POSTGRES_HOST_PORT:?POSTGRES_HOST_PORT must be set in .env}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - carequeue-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USERNAME:?DATABASE_USERNAME must be set in .env}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis cache and distributed lock engine (password protected)
+  redis:
+    image: redis:7-alpine
+    container_name: ${CQ_STACK}-redis
+    restart: unless-stopped
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:?REDIS_PASSWORD must be set in .env}"]
+    environment:
+      # Lets redis-cli in the healthcheck authenticate without putting the password on its command line.
+      REDISCLI_AUTH: ${REDIS_PASSWORD:?REDIS_PASSWORD must be set in .env}
+    ports:
+      - "${CQ_BIND_ADDRESS:-127.0.0.1}:${REDIS_HOST_PORT:?REDIS_HOST_PORT must be set in .env}:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - carequeue-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Zookeeper for Kafka coordination (internal only, no host port)
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.0
+    container_name: ${CQ_STACK}-zookeeper
+    restart: unless-stopped
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - carequeue-net
+
+  # Kafka event streaming broker
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: ${CQ_STACK}-kafka
+    restart: unless-stopped
+    depends_on:
+      - zookeeper
+    ports:
+      # Host clients connect to KAFKA_HOST_PORT; the container still listens on 9092 internally.
+      - "${CQ_BIND_ADDRESS:-127.0.0.1}:${KAFKA_HOST_PORT:?KAFKA_HOST_PORT must be set in .env}:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      # Containers use kafka:29092; the host uses localhost:KAFKA_HOST_PORT. The advertised host port
+      # must match the published one, or host clients connect to the wrong port.
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:${KAFKA_HOST_PORT:?KAFKA_HOST_PORT must be set in .env}
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - carequeue-net
+
+  # Spring Boot backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../docker/Dockerfile.backend
+    container_name: ${CQ_STACK}-backend
+    restart: unless-stopped
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DATABASE_HOST: postgresql
+      DATABASE_PORT: 5432
+      DATABASE_NAME: ${DATABASE_NAME:?DATABASE_NAME must be set in .env}
+      DATABASE_USERNAME: ${DATABASE_USERNAME:?DATABASE_USERNAME must be set in .env}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:?DATABASE_PASSWORD must be set in .env}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD must be set in .env}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      KAFKA_CONSUMER_ENABLED: "true"
+      KAFKA_CREATE_TOPICS: "true"
+      CAREQUEUE_OUTBOX_SCHEDULED: "true"
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set in .env}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:?BOOTSTRAP_ADMIN_PASSWORD must be set in .env}
+      CAREQUEUE_TIMEZONE: ${CAREQUEUE_TIMEZONE:-Asia/Kolkata}
+      # Browser origins allowed to call the API.
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3001,http://127.0.0.1:3001}
+      # Email (OTP). Set these in .env for real delivery. Without SPRING_MAIL_HOST, OTP sends fail safely.
+      CAREQUEUE_MAIL_MODE: ${CAREQUEUE_MAIL_MODE:-smtp}
+      # Require a verified email for online signup. Keep false until the signup OTP screen is deployed.
+      CAREQUEUE_SIGNUP_REQUIRE_EMAIL_OTP: ${CAREQUEUE_SIGNUP_REQUIRE_EMAIL_OTP:-false}
+      # AI symptom screening (optional). Default off, rule-based screening is used.
+      # Gemini test: CAREQUEUE_AI_PROVIDER=openai, OPENAI_API_KEY=<Gemini key>,
+      # SPRING_AI_OPENAI_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai/,
+      # SPRING_AI_OPENAI_CHAT_OPTIONS_MODEL=gemini-2.5-flash
+      CAREQUEUE_AI_PROVIDER: ${CAREQUEUE_AI_PROVIDER:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      SPRING_AI_OPENAI_BASE_URL: ${SPRING_AI_OPENAI_BASE_URL:-https://api.openai.com}
+      SPRING_AI_OPENAI_CHAT_OPTIONS_MODEL: ${SPRING_AI_OPENAI_CHAT_OPTIONS_MODEL:-gpt-4o-mini}
+      CAREQUEUE_MAIL_FROM: ${CAREQUEUE_MAIL_FROM:-no-reply@carequeue.invalid}
+      SPRING_MAIL_HOST: ${SPRING_MAIL_HOST:-}
+      SPRING_MAIL_PORT: ${SPRING_MAIL_PORT:-587}
+      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME:-}
+      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD:-}
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "true"
+      JAVA_TOOL_OPTIONS: "-Xmx3g"
+    ports:
+      - "${CQ_BIND_ADDRESS:-127.0.0.1}:${BACKEND_HOST_PORT:?BACKEND_HOST_PORT must be set in .env}:8080"
+    networks:
+      - carequeue-net
+
+  # React frontend (nginx). nginx proxies /api and /ws to the backend on the internal network.
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../docker/Dockerfile.frontend
+    container_name: ${CQ_STACK}-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${CQ_BIND_ADDRESS:-127.0.0.1}:${FRONTEND_HOST_PORT:?FRONTEND_HOST_PORT must be set in .env}:80"
+    networks:
+      - carequeue-net
+
+networks:
+  carequeue-net:
+    name: ${CQ_STACK}_net
+    driver: bridge
+
+volumes:
+  postgres_data:
+    name: ${CQ_STACK}_postgres_data
+  redis_data:
+    name: ${CQ_STACK}_redis_data

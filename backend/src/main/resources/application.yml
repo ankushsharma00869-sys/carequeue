@@ -1,0 +1,151 @@
+server:
+  port: 8080
+  error:
+    include-message: always
+    include-binding-errors: always
+
+spring:
+  application:
+    name: carequeue-backend
+  profiles:
+    active: dev
+  
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          batch_size: 25
+  
+  # Redis configuration with graceful degradation
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 2000ms
+
+  # Kafka configuration
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: carequeue-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      # ErrorHandlingDeserializer turns an undeserializable (malformed) record into a
+      # DeserializationException handled by the error handler, instead of an endless
+      # fail-and-refetch loop on that offset.
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      properties:
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
+        spring.json.trusted.packages: "com.carequeue.event"
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        max.block.ms: 1000
+
+  # Spring AI OpenAI client. Only ever called when carequeue.ai.provider=openai below;
+  # with the default "rule-based" provider this section is inert (the starter's
+  # ChatModel bean is constructed but never invoked, so a blank api-key here is
+  # harmless — see SpringAiSymptomAnalyzer).
+  ai:
+    openai:
+      # A syntactically-plausible placeholder, NOT a real key. The OpenAI starter's
+      # autoconfiguration constructs its OpenAiApi bean unconditionally at context
+      # startup (this is NOT gated by carequeue.ai.provider — only
+      # SpringAiSymptomAnalyzer itself is), and that constructor appears to reject a
+      # blank api-key via an assertion, which was failing the ENTIRE application
+      # context on startup even with the default rule-based provider. An actual call
+      # is only ever made when carequeue.ai.provider=openai, so this placeholder is
+      # harmless otherwise — it only lets the (unused) client object be constructed.
+      api-key: ${OPENAI_API_KEY:sk-not-configured}
+      chat:
+        options:
+          model: ${CAREQUEUE_AI_MODEL:gpt-4o-mini}
+          temperature: 0.2
+
+# CareQueue Security and Business Properties
+carequeue:
+  clock:
+    # The hospital's local timezone. Every "today" and "now" in business logic uses this zone,
+    # not the container's (Docker containers default to UTC). Assumed Asia/Kolkata: confirm for each site.
+    zone: ${CAREQUEUE_TIMEZONE:Asia/Kolkata}
+  outbox:
+    # Scheduled delivery of PENDING Kafka events. Off by default so tests are deterministic;
+    # docker-compose turns it on. relayPending() can always be called directly.
+    scheduled-relay: ${CAREQUEUE_OUTBOX_SCHEDULED:false}
+    relay-delay-ms: ${CAREQUEUE_OUTBOX_DELAY_MS:5000}
+  ai:
+    # rule-based (default, no external calls, no API key needed) | openai (real LLM call
+    # via Spring AI, requires OPENAI_API_KEY; falls back to rule-based on any failure).
+    provider: ${CAREQUEUE_AI_PROVIDER:rule-based}
+    timeout-ms: ${CAREQUEUE_AI_TIMEOUT_MS:8000}
+  kafka:
+    # Consumer + topic creation are opt-in so local dev without a broker stays quiet.
+    consumer-enabled: ${KAFKA_CONSUMER_ENABLED:false}
+    create-topics: ${KAFKA_CREATE_TOPICS:false}
+  notifications:
+    email:
+      provider: log   # only "log" ships; add a real provider bean implementing NotificationChannelSender
+    sms:
+      provider: log
+  jwt:
+    secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000} # 24 hours
+  rules:
+    cancellation-threshold-minutes: 30
+    slot-duration-minutes: 15
+    max-daily-tokens-per-doctor: 60
+  cors:
+    allowed-origins: "${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173}"
+
+---
+# Dev Profile: Zero-friction local development with in-memory DB and embedded support
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: jdbc:h2:mem:carequeue_dev;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    show-sql: false
+
+---
+# Production Profile: PostgreSQL, External Redis, Production Kafka
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://${DATABASE_HOST:localhost}:${DATABASE_PORT:5432}/${DATABASE_NAME:carequeue}}
+    username: ${DATABASE_USERNAME:postgres}
+    password: ${DATABASE_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+  h2:
+    console:
+      enabled: false
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: false
+
+carequeue:
+  seed:
+    demo-data: false
+  jwt:
+    # No default here on purpose: the base profile's default secret is sitting in this
+    # source file, so it must never be used in production. Startup fails fast if
+    # JWT_SECRET isn't set, instead of silently signing tokens with a secret anyone
+    # who has read this code already knows.
+    secret: ${JWT_SECRET}
