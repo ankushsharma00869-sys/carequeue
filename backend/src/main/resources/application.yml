@@ -128,7 +128,7 @@ spring:
   config:
     activate:
       on-profile: prod
-      datasource:
+  datasource:
     url: ${DATABASE_URL:jdbc:postgresql://${DATABASE_HOST:localhost}:${DATABASE_PORT:5432}/${DATABASE_NAME:carequeue}?sslmode=${DATABASE_SSLMODE:prefer}}
     username: ${DATABASE_USERNAME}
     password: ${DATABASE_PASSWORD}
