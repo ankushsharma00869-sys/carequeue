@@ -128,10 +128,10 @@ spring:
   config:
     activate:
       on-profile: prod
-  datasource:
-    url: jdbc:postgresql://neondb_owner:npg_AOyW8IZNfd1a@ep-dawn-hill-b3xvudsj-pooler.c-4.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
-    username: neondb_owner
-    password: npg_AOyW8IZNfd1a
+      datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://${DATABASE_HOST:localhost}:${DATABASE_PORT:5432}/${DATABASE_NAME:carequeue}?sslmode=${DATABASE_SSLMODE:prefer}}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
     driver-class-name: org.postgresql.Driver
   h2:
     console:
