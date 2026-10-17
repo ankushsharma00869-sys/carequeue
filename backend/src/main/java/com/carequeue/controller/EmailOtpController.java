@@ -59,7 +59,8 @@ public class EmailOtpController {
             // Log the exception type and root cause only: never the address, the code, or the password.
             Throwable root = e;
             while (root.getCause() != null) root = root.getCause();
-            log.warn("OTP email send failed: {} / root cause: {}", e.getClass().getSimpleName(), root.toString().replaceAll("[^\\s]+@[^\\s]+", "<address>"));
+            log.warn("OTP email send failed: {} / root cause: {}", e.getClass().getSimpleName(),
+                root.toString().replaceAll("[^\\s]+@[^\\s]+", "<address>"));
             // Mail provider down or not configured. Say so honestly; do not claim a code was sent.
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                 .body(Map.of("message", "We could not send the verification email right now. Please try again later."));
