@@ -32,3 +32,49 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #334155;
 }
+
+/* ---- Polish: accessibility and feel ---- */
+
+/* Clear focus ring for keyboard users (mouse clicks do not show it). */
+:focus-visible {
+  outline: 2px solid #38BDF8;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Buttons look clickable, and disabled ones look disabled. */
+button:not(:disabled),
+[role="button"],
+a {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Text selection matches the accent colour. */
+::selection {
+  background: rgba(56, 189, 248, 0.35);
+  color: #F8FAFC;
+}
+
+/* Placeholder text readable on the dark background, but clearly secondary. */
+input::placeholder,
+textarea::placeholder {
+  color: #64748B;
+  opacity: 1;
+}
+
+/* Respect users who ask for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
