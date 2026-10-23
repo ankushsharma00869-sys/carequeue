@@ -29,7 +29,7 @@ export const AiScreeningPage: React.FC = () => {
   };
 
   return (
-    <div className="p-8 max-w-4xl mx-auto space-y-8">
+    <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-8">
       {/* Header */}
       <div>
         <h1 className="text-xl font-bold text-primary-text tracking-wide">

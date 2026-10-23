@@ -112,7 +112,7 @@ export const DoctorDashboardPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="p-8 space-y-4 max-w-6xl mx-auto">
+      <div className="p-4 md:p-8 space-y-4 max-w-6xl mx-auto">
         <div className="h-6 w-48 bg-surface-elevated animate-pulse rounded"></div>
         <div className="h-64 bg-surface border border-border animate-pulse rounded-lg"></div>
       </div>
@@ -122,7 +122,7 @@ export const DoctorDashboardPage: React.FC = () => {
   const current = overview?.currentPatient;
 
   return (
-    <div className="p-8 max-w-6xl mx-auto space-y-8">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-8">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-primary-text tracking-wide">
@@ -141,7 +141,7 @@ export const DoctorDashboardPage: React.FC = () => {
         </button>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-3">
         <div className="p-4 rounded-lg bg-surface border border-border">
           <div className="text-[11px] text-muted-text font-medium">TOTAL TODAY</div>
           <div className="text-2xl font-bold font-mono text-primary-text mt-1">{overview?.totalPatientsToday}</div>

@@ -57,7 +57,7 @@ export const WalkInPatientForm: React.FC<Props> = ({ onCreated, onCancel }) => {
       <input className={inputClass} placeholder="Full name *" value={fullName} onChange={(e) => setFullName(e.target.value)} required maxLength={120} />
       <input className={inputClass} type="email" placeholder="Email (recommended)" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={100} />
       <input className={inputClass} placeholder="Mobile (optional)" value={phone} onChange={(e) => setPhone(e.target.value)} maxLength={20} />
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <input className={inputClass} type="date" value={dob} onChange={(e) => setDob(e.target.value)} />
         <select className={inputClass} value={gender} onChange={(e) => setGender(e.target.value)}>
           <option value="">Gender</option>

@@ -80,7 +80,7 @@ export const PatientDashboardPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="p-8 space-y-4 max-w-5xl mx-auto">
+      <div className="p-4 md:p-8 space-y-4 max-w-5xl mx-auto">
         <div className="h-6 w-48 bg-surface-elevated animate-pulse rounded"></div>
         <div className="h-44 bg-surface border border-border animate-pulse rounded-lg"></div>
       </div>
@@ -88,7 +88,7 @@ export const PatientDashboardPage: React.FC = () => {
   }
 
   return (
-    <div className="p-8 max-w-5xl mx-auto space-y-8">
+    <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -132,7 +132,7 @@ export const PatientDashboardPage: React.FC = () => {
             </Badge>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-border">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-border">
             <div className="p-6 text-center">
               <div className="text-[11px] uppercase tracking-wider text-muted-text font-semibold">YOUR TOKEN</div>
               <div className="text-3xl font-bold font-mono text-accent mt-2 tracking-tight">
@@ -201,7 +201,7 @@ export const PatientDashboardPage: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="p-8 rounded-lg bg-surface border border-border text-center">
+        <div className="p-4 md:p-8 rounded-lg bg-surface border border-border text-center">
           <Calendar className="w-8 h-8 text-muted-text mx-auto mb-2" />
           <h3 className="text-sm font-semibold text-primary-text">No Active Consultation Today</h3>
           <p className="text-xs text-secondary-text mt-1 max-w-sm mx-auto">

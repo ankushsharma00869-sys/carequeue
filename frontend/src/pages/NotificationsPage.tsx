@@ -66,7 +66,7 @@ export const NotificationsPage: React.FC = () => {
       {error && <div className="p-3 rounded bg-emergency/15 border border-emergency/30 text-xs text-emergency">{error}</div>}
 
       {!loading && !error && items.length === 0 && (
-        <div className="p-8 text-center text-xs text-secondary-text bg-surface border border-border rounded-lg">
+        <div className="p-4 md:p-8 text-center text-xs text-secondary-text bg-surface border border-border rounded-lg">
           <Bell className="w-5 h-5 mx-auto mb-2 text-muted-text" />
           No notifications yet. Booking confirmations and "your token was called" alerts will appear here.
         </div>

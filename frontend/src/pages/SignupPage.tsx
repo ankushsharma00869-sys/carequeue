@@ -214,7 +214,7 @@ export const SignupPage: React.FC = () => {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-medium text-secondary-text mb-1">Gender</label>
                 <select

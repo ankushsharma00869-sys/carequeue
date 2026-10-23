@@ -76,7 +76,7 @@ export const WeeklySchedulePicker: React.FC<{ value: DayRow[]; onChange: (rows: 
   return (
     <div className="md:col-span-2">
       <p className="text-xs font-medium text-primary-text mb-2">Weekly schedule</p>
-      <div className="grid grid-cols-12 gap-2 text-[11px] text-secondary-text mb-1">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-2 text-[11px] text-secondary-text mb-1">
         <span className="col-span-3">Day</span>
         <span className="col-span-2">From</span>
         <span className="col-span-2">To</span>
@@ -85,7 +85,7 @@ export const WeeklySchedulePicker: React.FC<{ value: DayRow[]; onChange: (rows: 
       </div>
       <div className="space-y-2">
         {value.map((r) => (
-          <div key={r.dayOfWeek} className="grid grid-cols-12 items-center gap-2">
+          <div key={r.dayOfWeek} className="grid grid-cols-1 md:grid-cols-12 items-center gap-2">
             <label className="col-span-3 flex items-center gap-2 text-xs text-primary-text">
               <input
                 type="checkbox"

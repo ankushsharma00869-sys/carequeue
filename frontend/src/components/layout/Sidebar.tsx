@@ -1,5 +1,5 @@
-import React from 'react';
-import { NavLink } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
   Activity,
@@ -13,10 +13,15 @@ import {
   Layers,
   ShieldCheck,
   Bell,
+  Menu,
 } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
   const { user } = useAuth();
+  // Mobile drawer state. Hooks must come before the early return below.
+  const [open, setOpen] = useState(false);
+  const location = useLocation();
+  useEffect(() => setOpen(false), [location.pathname]);
   if (!user) return null;
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
@@ -27,7 +32,21 @@ export const Sidebar: React.FC = () => {
     }`;
 
   return (
-    <aside className="w-60 bg-surface border-r border-border flex flex-col shrink-0 min-h-screen select-none">
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="md:hidden fixed top-3 left-3 z-30 w-9 h-9 rounded bg-surface border border-border flex items-center justify-center text-primary-text"
+        aria-label="Open menu"
+      >
+        <Menu className="w-4 h-4" />
+      </button>
+      {open && <div className="md:hidden fixed inset-0 z-40 bg-black/60" onClick={() => setOpen(false)} />}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-60 bg-surface border-r border-border flex flex-col select-none transform transition-transform duration-200 ${
+          open ? 'translate-x-0' : '-translate-x-full'
+        } md:static md:translate-x-0 md:flex md:shrink-0 md:min-h-screen`}
+      >
       {/* Brand Header */}
       <div className="h-14 flex items-center px-4 border-b border-border space-x-2.5">
         <div className="w-8 h-8 rounded bg-accent/15 border border-accent/30 flex items-center justify-center text-accent">
@@ -153,5 +172,6 @@ export const Sidebar: React.FC = () => {
         <span className="font-mono text-[10px]">BUILD 2026</span>
       </div>
     </aside>
+    </>
   );
 };

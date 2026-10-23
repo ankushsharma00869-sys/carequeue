@@ -134,7 +134,7 @@ export const BookingWizardPage: React.FC = () => {
   };
 
   return (
-    <div className="p-8 max-w-4xl mx-auto space-y-8">
+    <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-8">
       <div>
         <h1 className="text-xl font-bold text-primary-text tracking-wide">Hospital Consultation Booking</h1>
         <p className="text-xs text-secondary-text mt-1">Multi-step appointment scheduling and transactional queue token allocation</p>
@@ -268,7 +268,7 @@ export const BookingWizardPage: React.FC = () => {
                 <span>{availability.bookedSlots} / {availability.totalSlots} Slots Reserved</span>
               </div>
 
-              <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-4 sm:grid-cols-6 gap-2">
                 {availability.availableSlots.map((slot, idx) => (
                   <button
                     key={idx}

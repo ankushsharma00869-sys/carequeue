@@ -30,7 +30,7 @@ export const AnalyticsPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="p-8 max-w-6xl mx-auto">
+      <div className="p-4 md:p-8 max-w-6xl mx-auto">
         <div className="p-4 rounded bg-emergency/15 border border-emergency/30 text-xs text-emergency">{error}</div>
         <button onClick={fetchAnalytics} className="mt-4 text-xs text-accent hover:text-accent-hover">Try again</button>
       </div>
@@ -39,9 +39,9 @@ export const AnalyticsPage: React.FC = () => {
 
   if (loading || !data) {
     return (
-      <div className="p-8 space-y-4 max-w-6xl mx-auto">
+      <div className="p-4 md:p-8 space-y-4 max-w-6xl mx-auto">
         <div className="h-6 w-48 bg-surface-elevated animate-pulse rounded"></div>
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="h-24 bg-surface border border-border animate-pulse rounded-lg"></div>
           ))}
@@ -51,7 +51,7 @@ export const AnalyticsPage: React.FC = () => {
   }
 
   return (
-    <div className="p-8 max-w-6xl mx-auto space-y-8">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -73,7 +73,7 @@ export const AnalyticsPage: React.FC = () => {
       </div>
 
       {/* KPI METRIC CARDS (Direct from Section 30) */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="p-4 rounded-lg bg-surface border border-border shadow-md">
           <div className="flex items-center justify-between text-muted-text text-xs">
             <span>TOTAL SCHEDULED</span>
@@ -120,7 +120,7 @@ export const AnalyticsPage: React.FC = () => {
       </div>
 
       {/* SECONDARY ROW */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="p-3 rounded bg-surface-elevated/40 border border-border flex items-center justify-between text-xs">
           <span className="text-secondary-text">Active in Queue:</span>
           <strong className="font-mono text-accent">{data.waitingNow}</strong>

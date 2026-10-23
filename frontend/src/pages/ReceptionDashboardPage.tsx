@@ -119,7 +119,7 @@ export const ReceptionDashboardPage: React.FC = () => {
   );
 
   return (
-    <div className="p-8 max-w-6xl mx-auto space-y-8">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-primary-text tracking-wide">
@@ -280,7 +280,7 @@ export const ReceptionDashboardPage: React.FC = () => {
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium text-secondary-text mb-1">Emergency Patient Name</label>
               <input
@@ -305,7 +305,7 @@ export const ReceptionDashboardPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="col-span-2">
               <label className="block text-xs font-medium text-secondary-text mb-1">Hospital</label>
               <select
