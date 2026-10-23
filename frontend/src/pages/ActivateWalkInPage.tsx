@@ -31,12 +31,27 @@ export const ActivateWalkInPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
 
+  // Cooldown is stored in localStorage, so a refresh or tab switch does not reset it.
+  const COOLDOWN_MS = 60000;
+  const cooldownKey = 'cq_otp_next_claim:' + email.trim().toLowerCase();
+  const secondsLeft = () => {
+    const next = Number(localStorage.getItem(cooldownKey) || 0);
+    return Math.max(0, Math.ceil((next - Date.now()) / 1000));
+  };
+
   const sendCode = async () => {
+    const wait = secondsLeft();
+    if (wait > 0) {
+      setStep('code');
+      setInfo('A code was already sent. Please wait ' + wait + ' seconds before requesting another.');
+      return;
+    }
     setBusy(true);
     setError(null);
     setInfo(null);
     try {
       const res = await api.post('/otp/claim-walkin/request', { email, mobile, dateOfBirth: dob });
+      localStorage.setItem(cooldownKey, String(Date.now() + COOLDOWN_MS));
       setInfo(res.data?.message || 'If a matching record exists, a verification code has been sent.');
       setStep('code');
     } catch (err: any) {

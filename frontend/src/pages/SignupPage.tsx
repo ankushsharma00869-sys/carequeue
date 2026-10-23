@@ -32,11 +32,26 @@ export const SignupPage: React.FC = () => {
   const { register, loading } = useAuth();
   const navigate = useNavigate();
 
+  // Cooldown is stored in localStorage, so a refresh or tab switch does not reset it.
+  const COOLDOWN_MS = 60000;
+  const cooldownKey = (addr: string) => 'cq_otp_next_signup:' + addr.trim().toLowerCase();
+  const secondsLeft = (addr: string) => {
+    const next = Number(localStorage.getItem(cooldownKey(addr)) || 0);
+    return Math.max(0, Math.ceil((next - Date.now()) / 1000));
+  };
+
   const sendOtp = async () => {
+    const wait = secondsLeft(email);
+    if (wait > 0) {
+      setCodeSent(true);
+      setOtpMessage('A code was already sent. Please wait ' + wait + ' seconds before requesting another.');
+      return;
+    }
     setOtpBusy(true);
     setOtpMessage(null);
     try {
       const res = await api.post('/otp/email/request', { email });
+      localStorage.setItem(cooldownKey(email), String(Date.now() + COOLDOWN_MS));
       setCodeSent(true);
       setOtpMessage(res.data?.message || 'If this address can receive email, a verification code has been sent.');
     } catch (err: any) {

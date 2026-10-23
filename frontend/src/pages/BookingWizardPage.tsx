@@ -118,7 +118,16 @@ export const BookingWizardPage: React.FC = () => {
       setBookingSuccess(res.data);
       setStep(6);
     } catch (err: any) {
-      setBookingError(err.response?.data?.message || 'Booking conflict or system error.');
+      // No response means the connection dropped (tab switch, sleep, network). The server may still have saved it.
+      const interrupted = !err.response;
+      const conflict = err.response?.status === 409;
+      if (interrupted) {
+        setBookingError('The connection was interrupted. Your booking may still have gone through. Check My Appointments before booking again.');
+      } else if (conflict) {
+        setBookingError((err.response?.data?.message || 'This slot is no longer available.') + ' If you already see this booking in My Appointments, you do not need to book again.');
+      } else {
+        setBookingError(err.response?.data?.message || 'Booking conflict or system error.');
+      }
     } finally {
       setSubmitting(false);
     }
