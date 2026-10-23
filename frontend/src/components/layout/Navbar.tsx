@@ -20,8 +20,8 @@ export const Navbar: React.FC = () => {
       <div className="flex items-center space-x-6">
         <div className="flex items-center space-x-2 text-xs font-medium text-secondary-text">
           <Building2 className="w-4 h-4 text-accent" />
-          <span className="text-primary-text font-semibold tracking-wide">CityCare Hospital</span>
-          <span className="text-muted-text">• Metro Medical District</span>
+          <span className="text-primary-text font-semibold tracking-wide">Lucknow Hospital</span>
+          <span className="text-muted-text">• Bakshi Ka Talab, Lucknow</span>
         </div>
 
         <div className="flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-surface-elevated border border-border text-xs">
