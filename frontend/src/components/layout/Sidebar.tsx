@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   Bell,
   Menu,
+  X,
 } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
@@ -22,6 +23,19 @@ export const Sidebar: React.FC = () => {
   const [open, setOpen] = useState(false);
   const location = useLocation();
   useEffect(() => setOpen(false), [location.pathname]);
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    const previousOverflow = document.body.style.overflow;
+    document.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open]);
   if (!user) return null;
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
@@ -36,6 +50,7 @@ export const Sidebar: React.FC = () => {
       <button
         type="button"
         onClick={() => setOpen(true)}
+        aria-expanded={open}
         className="md:hidden fixed top-3 left-3 z-30 w-9 h-9 rounded bg-surface border border-border flex items-center justify-center text-primary-text"
         aria-label="Open menu"
       >
@@ -47,6 +62,14 @@ export const Sidebar: React.FC = () => {
           open ? 'translate-x-0' : '-translate-x-full'
         } md:static md:translate-x-0 md:flex md:shrink-0 md:min-h-screen`}
       >
+        <button
+          type="button"
+          onClick={() => setOpen(false)}
+          className="md:hidden absolute top-3 right-3 z-10 w-11 h-11 rounded flex items-center justify-center text-secondary-text hover:text-primary-text"
+          aria-label="Close menu"
+        >
+          <X className="w-5 h-5" />
+        </button>
       {/* Brand Header */}
       <div className="h-14 flex items-center px-4 border-b border-border space-x-2.5">
         <div className="w-8 h-8 rounded bg-accent/15 border border-accent/30 flex items-center justify-center text-accent">
