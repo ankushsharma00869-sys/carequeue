@@ -223,7 +223,72 @@ export const PatientDashboardPage: React.FC = () => {
           <span className="text-xs text-muted-text">{appointments.length} Total</span>
         </div>
 
-        <div className="overflow-x-auto">
+        {/* MOBILE: appointment cards (phones). Desktop keeps the table below. */}
+        <div className="md:hidden divide-y divide-border">
+          {appointments.length === 0 ? (
+            <p className="px-4 py-6 text-center text-xs text-secondary-text">No consultations recorded yet.</p>
+          ) : (
+            appointments.map((a) => (
+              <div key={a.id} className="px-4 py-4 space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="text-[11px] text-muted-text">Appointment ID</div>
+                    <div className="font-mono text-sm font-medium text-primary-text break-all">{a.appointmentNumber}</div>
+                  </div>
+                  <Badge
+                        variant={
+                          a.status === 'COMPLETED'
+                            ? 'success'
+                            : a.status === 'CANCELLED'
+                            ? 'neutral'
+                            : a.status === 'IN_QUEUE'
+                            ? 'normal'
+                            : 'neutral'
+                        }
+                  >
+                    {a.status}
+                  </Badge>
+                </div>
+
+                <div className="grid grid-cols-2 gap-x-3 gap-y-3 text-xs">
+                  <div className="min-w-0 col-span-2">
+                    <div className="text-[11px] text-muted-text">Doctor</div>
+                    <div className="font-medium text-primary-text break-words">{a.doctorName}</div>
+                    <div className="text-[11px] text-muted-text break-words">{a.departmentName} • {a.doctorRoom}</div>
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[11px] text-muted-text">Date & time</div>
+                    <div className="text-primary-text">{a.appointmentDate}</div>
+                    <div className="text-[11px] text-muted-text">{a.appointmentTime}</div>
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[11px] text-muted-text">Token</div>
+                    <div className="font-mono font-bold text-accent">{a.tokenFormatted || '--'}</div>
+                  </div>
+                </div>
+
+                {a.canCancel && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCancelModalAppt(a);
+                      setCancelError(null);
+                    }}
+                    className="w-full py-2.5 rounded border border-border text-secondary-text hover:text-emergency hover:border-emergency/40 text-xs transition-colors"
+                  >
+                    Cancel appointment
+                  </button>
+                )}
+                {!a.canCancel && a.status !== 'CANCELLED' && a.status !== 'COMPLETED' && (
+                  <p className="text-[11px] text-muted-text">Cancellation is locked within 30 min of the visit.</p>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* DESKTOP: full table, contained in its own scroll area */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-surface-elevated/60 text-secondary-text uppercase tracking-wider text-[11px] border-b border-border">
               <tr>
