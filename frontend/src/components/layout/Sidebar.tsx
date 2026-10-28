@@ -13,7 +13,6 @@ import {
   Layers,
   ShieldCheck,
   Bell,
-  Menu,
   X,
 } from 'lucide-react';
 
@@ -23,6 +22,12 @@ export const Sidebar: React.FC = () => {
   const [open, setOpen] = useState(false);
   const location = useLocation();
   useEffect(() => setOpen(false), [location.pathname]);
+  // The header's menu button asks for the drawer to open.
+  useEffect(() => {
+    const openDrawer = () => setOpen(true);
+    window.addEventListener('cq:open-menu', openDrawer);
+    return () => window.removeEventListener('cq:open-menu', openDrawer);
+  }, []);
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -47,15 +52,6 @@ export const Sidebar: React.FC = () => {
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        aria-expanded={open}
-        className="md:hidden fixed top-3 left-3 z-30 w-9 h-9 rounded bg-surface border border-border flex items-center justify-center text-primary-text"
-        aria-label="Open menu"
-      >
-        <Menu className="w-4 h-4" />
-      </button>
       {open && <div className="md:hidden fixed inset-0 z-40 bg-black/60" onClick={() => setOpen(false)} />}
       <aside
         className={`fixed inset-y-0 left-0 z-50 w-60 bg-surface border-r border-border flex flex-col select-none transform transition-transform duration-200 ${
