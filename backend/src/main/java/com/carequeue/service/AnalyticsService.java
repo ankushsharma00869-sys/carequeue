@@ -124,20 +124,38 @@ public class AnalyticsService {
     }
 
     /** Per-doctor totals for the date. Doctors with no appointments that day are absent. */
+    /** Mean minutes from consultation start to completion, per doctor, for visits that finished on {@code date}. */
+    private Map<Long, Double> averageConsultationByDoctor(LocalDate date) {
+        Map<Long, long[]> totals = new HashMap<>();
+        for (Object[] row : analyticsRepository.consultationTimestampPairsForDate(date)) {
+            long doctorId = ((Number) row[0]).longValue();
+            LocalDateTime started = (LocalDateTime) row[1];
+            LocalDateTime completed = (LocalDateTime) row[2];
+            long minutes = Math.max(0, Duration.between(started, completed).toMinutes());
+            long[] acc = totals.computeIfAbsent(doctorId, k -> new long[2]);
+            acc[0] += minutes;
+            acc[1] += 1;
+        }
+        Map<Long, Double> out = new HashMap<>();
+        totals.forEach((doctorId, acc) -> out.put(doctorId, round1((double) acc[0] / acc[1])));
+        return out;
+    }
+
     private List<DoctorPerformanceDto> doctorPerformance(LocalDate date) {
         List<DoctorPerformanceDto> out = new ArrayList<>();
+        Map<Long, Double> avgByDoctor = averageConsultationByDoctor(date);
         for (Object[] row : analyticsRepository.doctorPerformanceForDate(date, AppointmentStatus.COMPLETED)) {
             long totalAssigned = ((Number) row[3]).longValue();
             long completedCount = row[4] == null ? 0L : ((Number) row[4]).longValue();
+            long doctorId = ((Number) row[0]).longValue();
             out.add(DoctorPerformanceDto.builder()
                 .doctorId(((Number) row[0]).longValue())
                 .doctorName((String) row[1])
                 .departmentName((String) row[2])
                 .totalAssigned(totalAssigned)
                 .completedPatients(completedCount)
-                // Per-doctor consultation duration is not measured per visit; left at 0 and
-                // hidden in the UI rather than showing the doctor's configured average as if observed.
-                .averageConsultationMinutes(0.0)
+                // Measured from the stored consultation start and completion times.
+                .averageConsultationMinutes(avgByDoctor.getOrDefault(doctorId, 0.0))
                 .build());
         }
         out.sort(Comparator.comparing(DoctorPerformanceDto::getDoctorName));

@@ -194,7 +194,7 @@ export const AnalyticsPage: React.FC = () => {
                 <th className="px-6 py-3 font-medium">Department</th>
                 <th className="px-6 py-3 font-medium">Assigned Visits</th>
                 <th className="px-6 py-3 font-medium">Completed</th>
-                <th className="px-6 py-3 font-medium">Avg Slot Duration</th>
+                <th className="px-6 py-3 font-medium">Avg Consultation</th>
                 <th className="px-6 py-3 font-medium text-right">Completion Rate</th>
               </tr>
             </thead>
@@ -207,7 +207,13 @@ export const AnalyticsPage: React.FC = () => {
                     <td className="px-6 py-4 text-secondary-text">{doc.departmentName}</td>
                     <td className="px-6 py-4 font-mono">{doc.totalAssigned}</td>
                     <td className="px-6 py-4 font-mono text-emerald-400">{doc.completedPatients}</td>
-                    <td className="px-6 py-4 text-secondary-text font-mono">{doc.averageConsultationMinutes} min</td>
+                    <td className="px-6 py-4 text-secondary-text font-mono">
+                      {doc.averageConsultationMinutes > 0
+                        ? `${doc.averageConsultationMinutes} min`
+                        : doc.completedPatients > 0
+                        ? '< 1 min'
+                        : '—'}
+                    </td>
                     <td className="px-6 py-4 text-right font-mono font-bold">
                       <span className={rate >= 75 ? 'text-emerald-400' : 'text-amber-400'}>{rate}%</span>
                     </td>

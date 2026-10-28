@@ -71,4 +71,16 @@ public interface AnalyticsRepository extends org.springframework.data.repository
           AND q.checkedInAt IS NOT NULL
         """)
     List<Object[]> waitTimestampPairsForDate(@Param("date") LocalDate date);
+
+    /**
+     * (doctorId, startedAt, completedAt) for queue entries of the given schedule date whose
+     * consultation both started and finished. The duration is measured here, per visit.
+     */
+    @Query("""
+        SELECT q.doctor.id, q.startedAt, q.completedAt FROM QueueEntry q
+        WHERE q.scheduleDate = :date
+          AND q.startedAt IS NOT NULL
+          AND q.completedAt IS NOT NULL
+        """)
+    List<Object[]> consultationTimestampPairsForDate(@Param("date") LocalDate date);
 }
